@@ -654,7 +654,6 @@
                     this.showNotification(`Максимум ${maxStock} шт.`, 'error');
                 }
             }
-
             async addToCart(productId, button) {
                 const originalText = button.textContent;
                 button.disabled = true;
@@ -681,11 +680,20 @@
                         this.showNotification(`✅ Товар добавлен в корзину`);
                         await this.updateCartCount();
 
+                        // ✅ Получаем обновленный список товаров
+                        const productsResponse = await fetch(`${this.apiUrl}/products`);
+                        const allProducts = await productsResponse.json();
+
+                        // Находим обновленный товар в списке
+                        const updatedProduct = allProducts.find(p => p.id === productId);
+
+                        if (updatedProduct) {
+                            // Обновляем карточку
+                            const newCard = this.createProductCard(updatedProduct);
+                            card.parentNode.replaceChild(newCard, card);
+                        }
+
                         button.textContent = '✓ Добавлено!';
-                        setTimeout(() => {
-                            button.textContent = originalText;
-                            button.disabled = false;
-                        }, 1500);
                     } else {
                         this.showNotification(`❌ ${result.error || 'Ошибка'}`, 'error');
                         button.textContent = originalText;
