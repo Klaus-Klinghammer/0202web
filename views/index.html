@@ -57,7 +57,42 @@
             align-items: center;
             gap: 10px;
         }
-               /* Стили остаются теми же, добавляем стили для кнопки применения */
+
+        .product-image {
+            width: 100%;
+            height: 220px; /* Фиксированная высота */
+            margin-bottom: 15px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Ключевой момент! */
+            transition: transform 0.3s;
+        }
+
+
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        /* Стили для заглушки, если нет картинки */
+        .product-image.no-image {
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .product-image.no-image span {
+            opacity: 0.5;
+        }
+
         .apply-filters-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -409,48 +444,102 @@
     </div>
 
         <!-- Модальное окно фильтров -->
-<!-- Модальное окно фильтров -->
-    <div id="filtersModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🔍 Фильтры</h2>
-                <button class="close-btn" onclick="filtersManager.hideFilters()">×</button>
-            </div>
+            <!-- ==================== МОДАЛЬНОЕ ОКНО ФИЛЬТРОВ ==================== -->
+        <div id="filtersModal" class="modal">
+            <div class="modal-content" style="max-width: 720px;">
+                <div class="modal-header">
+                    <h2>🔍 Фильтры</h2>
+                    <button class="close-btn" onclick="filtersManager.hideFilters()">×</button>
+                </div>
 
-            <div class="filter-section">
-                <h3>Категории</h3>
-                <label>
-                    <input class="category-filter" type="checkbox" name="motherboards" value="motherboards">
-                    Материнские платы
-                </label>
-                <label>
-                    <input class="category-filter" type="checkbox" name="cpus" value="cpus">
-                    Процессоры
-                </label>
-                <label>
-                    <input class="category-filter" type="checkbox" name="ram_rom" value="ram_rom">
-                    Память (RAM/ROM)
-                </label>
-                <label>
-                    <input class="category-filter" type="checkbox" name="coolers" value="coolers">
-                    Охлаждение
-                </label>
-                <label>
-                    <input class="category-filter" type="checkbox" name="consumables" value="consumables">
-                    Расходники
-                </label>
-                <label>
-                    <input class="category-filter" type="checkbox" name="gpus" value="gpus">
-                    Видеокарты
-                </label>
-            </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 10px 0;">
+                    
+                    <!-- Левая колонка - Категории -->
+                    <div>
+                        <h3 style="margin-bottom: 15px; color: #333;">Категории</h3>
+                        <div class="filter-section" style="margin-bottom: 0;">
+                            <label>
+                                <input class="category-filter" type="checkbox" value="motherboards"> Материнские платы
+                            </label>
+                            <label>
+                                <input class="category-filter" type="checkbox" value="cpus"> Процессоры
+                            </label>
+                            <label>
+                                <input class="category-filter" type="checkbox" value="ram_rom"> Память (RAM/ROM)
+                            </label>
+                            <label>
+                                <input class="category-filter" type="checkbox" value="coolers"> Охлаждение
+                            </label>
+                            <label>
+                                <input class="category-filter" type="checkbox" value="consumables"> Расходники
+                            </label>
+                            <label>
+                                <input class="category-filter" type="checkbox" value="gpus"> Видеокарты
+                            </label>
+                        </div>
+                    </div>
 
-            <!-- ✅ КНОПКА ПРАВИЛЬНО ВЫЗЫВАЕТ МЕТОД КЛАССА -->
-            <button class="apply-filters-btn" onclick="filtersManager.applyFilters()">
-                Применить фильтры
-            </button>
+                    <!-- Правая колонка -->
+                    <div>
+                        <div class="filter-section">
+                            <h3 style="margin-bottom: 12px; color: #333;">Цена, ₽</h3>
+                            <div style="display: flex; gap: 12px;">
+                                <input type="number" id="minPrice" placeholder="От" 
+                                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px;">
+                                <input type="number" id="maxPrice" placeholder="До" 
+                                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px;">
+                            </div>
+                            
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
+                                <button type="button" onclick="filtersManager.quickPrice(0, 10000)" 
+                                        style="font-size: 13px; padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 20px; cursor: pointer;">
+                                    до 10 000
+                                </button>
+                                <button type="button" onclick="filtersManager.quickPrice(10000, 30000)" 
+                                        style="font-size: 13px; padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 20px; cursor: pointer;">
+                                    10–30 тыс.
+                                </button>
+                                <button type="button" onclick="filtersManager.quickPrice(30000, 60000)" 
+                                        style="font-size: 13px; padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 20px; cursor: pointer;">
+                                    30–60 тыс.
+                                </button>
+                                <button type="button" onclick="filtersManager.quickPrice(60000, 999999)" 
+                                        style="font-size: 13px; padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 20px; cursor: pointer;">
+                                    от 60 000
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="filter-section">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="inStockOnly" class="stock-filter">
+                                Только в наличии
+                            </label>
+                        </div>
+
+                        <div class="filter-section">
+                            <h3 style="margin-bottom: 8px; color: #333;">Сортировать по</h3>
+                            <select id="sortBy" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px;">
+                                <option value="default">По умолчанию</option>
+                                <option value="price_asc">Цена: по возрастанию</option>
+                                <option value="price_desc">Цена: по убыванию</option>
+                                <option value="name">Название (А → Я)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 25px;">
+                    <button class="apply-filters-btn" onclick="filtersManager.resetFilters()" 
+                            style="background: #f0f0f0; color: #333;">
+                        Сбросить всё
+                    </button>
+                    <button class="apply-filters-btn" onclick="filtersManager.applyFilters()">
+                        Применить фильтры
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
 
     <!-- Модальное окно корзины -->
     <div id="cartModal" class="modal">
@@ -476,69 +565,105 @@
                 this.filters = {};
             }
 
+            // ==================== Основной метод применения фильтров ====================
             applyFilters = () => {
                 const checkboxes = document.querySelectorAll('.category-filter:checked');
-                const selectedValues = Array.from(checkboxes).map(cb => cb.value);
+                const selectedCategories = Array.from(checkboxes).map(cb => cb.value);
 
-                this.filters.categories = selectedValues;
+                const minPrice = document.getElementById('minPrice').value.trim();
+                const maxPrice = document.getElementById('maxPrice').value.trim();
+                const inStockOnly = document.getElementById('inStockOnly').checked;
+                const sortBy = document.getElementById('sortBy').value;
 
-                console.log('Выбранные значения:', selectedValues);
-                console.log('Текущие фильтры:', this.filters);
+                this.filters = {
+                    categories: selectedCategories,
+                    minPrice: minPrice ? parseFloat(minPrice) : null,
+                    maxPrice: maxPrice ? parseFloat(maxPrice) : null,
+                    inStock: inStockOnly,
+                    sortBy: sortBy
+                };
 
                 this.sendFiltersToServer();
             }
 
+            // ==================== Отправка на сервер ====================
             async sendFiltersToServer() {
-                console.log('Отправка на сервер:', this.filters);
-
                 try {
                     const params = new URLSearchParams();
 
                     if (this.filters.categories && this.filters.categories.length > 0) {
                         params.append('categories', this.filters.categories.join(','));
                     }
+                    if (this.filters.minPrice !== null) {
+                        params.append('minPrice', this.filters.minPrice);
+                    }
+                    if (this.filters.maxPrice !== null) {
+                        params.append('maxPrice', this.filters.maxPrice);
+                    }
+                    if (this.filters.inStock) {
+                        params.append('inStock', 'true');
+                    }
 
                     const url = `${this.apiUrl}/products/filter?${params.toString()}`;
-                    console.log('Запрос к:', url);
+                    console.log('Запрос фильтров:', url);
 
                     const response = await fetch(url);
+                    if (!response.ok) throw new Error('Ошибка сервера');
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    let products = await response.json();
+
+                    // === Клиентская сортировка (если выбрана) ===
+                    if (this.filters.sortBy && this.filters.sortBy !== 'default') {
+                        if (this.filters.sortBy === 'price_asc') {
+                            products.sort((a, b) => a.price - b.price);
+                        } else if (this.filters.sortBy === 'price_desc') {
+                            products.sort((a, b) => b.price - a.price);
+                        } else if (this.filters.sortBy === 'name') {
+                            products.sort((a, b) => a.name.localeCompare(b.name));
+                        }
                     }
-
-                    const products = await response.json();
-                    console.log('Получены отфильтрованные товары:', products);
-                    console.log('Количество товаров:', products.length);
 
                     if (window.shopManager) {
-                        console.log('Вызываем shopManager.renderProducts');
-                        shopManager.renderProducts(products);
-                    } else {
-                        console.error('shopManager не найден!');
+                        window.shopManager.renderProducts(products);
+                        window.shopManager.showNotification(`Найдено товаров: ${products.length}`);
                     }
 
-                    this.showCustomNotification(`Найдено товаров: ${products.length}`);
                     this.hideFilters();
 
                 } catch (error) {
-                    console.error('Ошибка при фильтрации:', error);
-                    this.showCustomNotification('Ошибка при фильтрации', 'error');
+                    console.error('Ошибка фильтрации:', error);
+                    if (window.shopManager) {
+                        window.shopManager.showNotification('Ошибка при применении фильтров', 'error');
+                    }
                 }
             }
 
-            showCustomNotification(message, type = 'success') {
-                const notification = document.createElement('div');
-                notification.className = `notification ${type === 'error' ? 'error' : ''}`;
-                notification.textContent = message;
-
-                document.body.appendChild(notification);
-
-                setTimeout(() => {
-                    notification.remove();
-                }, 3000);
+            // ==================== Быстрый выбор цены ====================
+            quickPrice(min, max) {
+                document.getElementById('minPrice').value = min || '';
+                document.getElementById('maxPrice').value = (max && max !== 999999) ? max : '';
             }
 
+            // ==================== Сброс всех фильтров ====================
+            resetFilters() {
+                document.getElementById('minPrice').value = '';
+                document.getElementById('maxPrice').value = '';
+                document.getElementById('inStockOnly').checked = false;
+                document.getElementById('sortBy').value = 'default';
+
+                document.querySelectorAll('.category-filter').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                this.hideFilters();
+
+                // Показываем все товары заново
+                if (window.shopManager) {
+                    window.shopManager.loadProducts();
+                }
+            }
+
+            // ==================== Открытие / закрытие окна ====================
             showFilters() {
                 this.modal.classList.add('active');
             }
@@ -613,7 +738,15 @@
                         ? `<span class="stock available">✓ В наличии: ${stockQuantity} шт.</span>`
                         : '<span class="stock">✗ Нет в наличии</span>';
 
+                    // ✅ ДОБАВЛЯЕМ КАРТИНКУ
+                    const imageUrl = product.image_url
+                        ? product.image_url
+                        : '/static/default.png'; // если нет картинки, используем дефолтную
+
                     card.innerHTML = `
+                        <div class="product-image">
+                            <img src="${imageUrl}" alt="${product.name || 'Товар'}" loading="lazy">
+                        </div>
                         <h3>${product.name || 'Без названия'}</h3>
                         <div class="product-description">${product.description || 'Нет описания'}</div>
                         <div class="price">${(product.price || 0).toLocaleString()} ₽</div>
@@ -806,7 +939,7 @@
         window.shopManager = shopManager;
         window.cartManager = cartManager;
         window.filtersManager = filtersManager;
-        // Закрытие модального окна по клику вне его
+
         window.onclick = function(event) {
             const modal = document.getElementById('cartModal');
             if (event.target === modal) {
