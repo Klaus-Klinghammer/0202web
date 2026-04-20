@@ -109,6 +109,35 @@ def api_add_to_cart():
         response.status = 500
         return json.dumps({'error': str(e)})
 
+@route('/api/cart/remove', method='POST')
+def api_remove_from_cart():
+    """Удалить товар из корзины"""
+    try:
+        data = request.json or {}
+        product_id = data.get('product_id')
+        
+        if not product_id:
+            response.status = 400
+            return json.dumps({'success': False, 'error': 'Не указан ID товара'})
+        
+        result = db.remove_from_cart(USER_ID, product_id)
+        
+        if result['success']:
+            # Возвращаем обновлённую корзину
+            cart = db.get_cart(USER_ID)
+            response.content_type = 'application/json'
+            return json.dumps({
+                'success': True,
+                'message': 'Товар удалён из корзины',
+                'cart': cart
+            }, ensure_ascii=False, default=str)
+        else:
+            response.status = 400
+            return json.dumps(result, ensure_ascii=False)
+            
+    except Exception as e:
+        response.status = 500
+        return json.dumps({'success': False, 'error': str(e)})
 
 @route('/api/cart/clear', method='POST')
 def api_clear_cart():
@@ -123,7 +152,6 @@ if __name__ == '__main__':
     print("Нажмите Ctrl+C для остановки")
 
     # Автоматическое закрытие соединения с БД при выходе
-    import atexit
-    atexit.register(db.close)   # ← если у тебя есть метод close() в Database
+    
 
     run(host='localhost', port=8080, debug=True, reloader=True)
