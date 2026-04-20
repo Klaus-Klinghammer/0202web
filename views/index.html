@@ -921,13 +921,46 @@
                                 ${item.price.toLocaleString()} ₽ × ${item.quantity}
                             </div>
                         </div>
-                        <div class="cart-item-price">
-                            ${(item.price * item.quantity).toLocaleString()} ₽
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div class="cart-item-price">
+                                ${(item.price * item.quantity).toLocaleString()} ₽
+                            </div>
+                            <button onclick="cartManager.removeFromCart(${item.product_id})" 
+                                    style="background: #ff4757; color: white; border: none; width: 32px; height: 32px; 
+                                           border-radius: 8px; cursor: pointer; font-size: 18px; line-height: 1;">
+                                ×
+                            </button>
                         </div>
                     </div>
                 `).join('');
 
                 cartTotal.textContent = `Итого: ${cart.total.toLocaleString()} ₽`;
+            }
+
+            // Метод удаления товара из корзины
+            async removeFromCart(productId) {
+                if (!confirm('Удалить этот товар из корзины?')) return;
+
+                try {
+                    const response = await fetch(`${this.apiUrl}/cart/remove`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id: productId })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.renderCart(result.cart);           // обновляем корзину
+                        await window.shopManager.updateCartCount(); // обновляем счётчик в шапке
+                        window.shopManager.showNotification('Товар удалён из корзины');
+                    } else {
+                        window.shopManager.showNotification(result.error || 'Ошибка удаления', 'error');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    window.shopManager.showNotification('Ошибка соединения', 'error');
+                }
             }
         }
 
