@@ -115,11 +115,13 @@ class Database:
                 return dict(zip(columns, row))
             return None
 
-    # ====================== НОВЫЙ МЕТОД ======================
+   
+
+    
     def get_filtered_products(self, categories=None, min_price=None, max_price=None, in_stock=False):
         """Фильтрация товаров по категориям, цене и наличию"""
         with self.get_connection() as conn:
-            conn.row_factory = sqlite3.Row   # позволяет обращаться по имени столбца
+            conn.row_factory = sqlite3.Row   
             cursor = conn.cursor()
 
             query = "SELECT * FROM products WHERE 1=1"
@@ -146,7 +148,7 @@ class Database:
             cursor.execute(query, params)
             rows = cursor.fetchall()
 
-            # sqlite3.Row можно напрямую преобразовать в dict
+          
             return [dict(row) for row in rows]
 
     def add_to_cart(self, user_id, product_id, quantity=1):
@@ -213,6 +215,39 @@ class Database:
                 'total': total
             }
 
+    def remove_from_cart(self, user_id, product_id):
+        """Удалить товар из корзины и вернуть количество на склад"""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # Получаем количество перед удалением
+            cursor.execute('''
+                SELECT quantity FROM cart 
+                WHERE user_id = ? AND product_id = ?
+            ''', (user_id, product_id))
+            row = cursor.fetchone()
+            
+            if not row:
+                return {'success': False, 'error': 'Товар не найден в корзине'}
+            
+            quantity = row[0]
+            
+            # Удаляем из корзины
+            cursor.execute('''
+                DELETE FROM cart 
+                WHERE user_id = ? AND product_id = ?
+            ''', (user_id, product_id))
+            
+            # Возвращаем товар на склад
+            cursor.execute('''
+                UPDATE products 
+                SET stock_quantity = stock_quantity + ? 
+                WHERE id = ?
+            ''', (quantity, product_id))
+            
+            conn.commit()
+            return {'success': True}
+
     def clear_cart(self, user_id):
         """Очистить корзину"""
         with self.get_connection() as conn:
@@ -222,4 +257,4 @@ class Database:
 
     def close(self):
         """Метод для явного закрытия (вызывается при выходе из приложения)"""
-        pass  # Пока ничего не нужно, т.к. используем контекстные менеджеры with
+        pass  
