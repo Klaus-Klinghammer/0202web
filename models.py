@@ -48,7 +48,6 @@ class Database:
                 self.add_sample_products()
 
     def add_sample_products(self):
-
         sample_products = [
             # Материнские платы (motherboards) - 5 шт
             ('ASUS ROG STRIX Z790-E', 'Материнская плата для игрового ПК, socket 1700, DDR5, PCIe 5.0', 28999.99, 8, 'motherboards', "/static/ASUS-ROG-STRIX-Z790-E"),
@@ -92,7 +91,6 @@ class Database:
             ('NVIDIA GeForce RTX 4070 Ti', 'Видеокарта для игр в 1440p с трассировкой лучей', 64999.99, 6, 'gpus', "/static/RTX4070TI"),
             ('AMD Radeon RX 7800 XT', 'Видеокарта среднего уровня для игр', 49999.99, 8, 'gpus', "/static/RX7800XT")
         ]
-
 
         with self.get_connection() as conn:
             cursor = conn.cursor()
