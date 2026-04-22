@@ -3,6 +3,7 @@ from bottle import route, run, template, request, response, static_file
 import json
 import sqlite3
 from models import Database
+import myform
 
 # Создаем экземпляр базы данных
 db = Database()
@@ -154,4 +155,4 @@ def api_clear_cart():
 if __name__ == '__main__':
     print("Сервер запущен на http://localhost:8080")
     print("Нажмите Ctrl+C для остановки")
-    run(host='localhost', port=8080, debug=True, reloader=True)
+    run(host='localhost', debug=True, reloader=True)
