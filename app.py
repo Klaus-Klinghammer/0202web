@@ -155,4 +155,4 @@ def api_clear_cart():
 if __name__ == '__main__':
     print("Сервер запущен на http://localhost:8080")
     print("Нажмите Ctrl+C для остановки")
-    run(host='localhost', debug=True, reloader=True)
+    run(host='localhost', port="8081", debug=True, reloader=True)
