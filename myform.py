@@ -2,6 +2,12 @@
 from bottle import post, request
 import re
 from datetime import datetime
+import pdb  # добавьте импорт pdb
+
+# ========== ДОБАВЬТЕ ЭТИ СТРОКИ ==========
+# Словарь для хранения вопросов (email -> question)
+questions_dict = {}
+# =========================================
 
 @post('/home')
 def my_form():
@@ -9,7 +15,7 @@ def my_form():
     username = request.forms.get('USERNAME', '').strip()
     question = request.forms.get('QUEST', '').strip()
     email = request.forms.get('ADRESS', '').strip()
-    
+
     # 7.4 Проверка заполненности полей
     if not username:
         return "Error: Please enter your name!"
@@ -17,14 +23,20 @@ def my_form():
         return "Error: Please enter your question!"
     if not email:
         return "Error: Please enter your email!"
-    
+
     # 7.1 Паттерн (регулярное выражение) для проверки email
     email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     if not re.match(email_pattern, email):
         return "Error: Invalid email format! Example: name@domain.com"
-    
+
+    # Записываем данные в словарь (email -> question)
+    questions_dict[email] = question
+
+    # ТОЧКА ОСТАНОВА ДЛЯ ОТЛАДКИ
+    pdb.set_trace()
+
     # 7.3 Получаем текущую дату
     current_date = datetime.now().strftime('%Y-%m-%d')
-    
+
     # 7.2 Возвращаем сообщение с именем и датой
     return f"Thanks, {username}! The answer will be sent to the mail {email}. Access Date: {current_date}"
