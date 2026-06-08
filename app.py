@@ -204,6 +204,94 @@ def api_clear_cart():
     db.clear_cart(USER_ID)
     return json.dumps({'success': True})
 
+
+
+@route('/news')
+def news():
+    """Страница новинок"""
+    return template('views/news.html')
+
+
+@route('/api/products/latest', method='GET')
+def api_get_latest_products():
+    """Получить последние добавленные товары (новинки)"""
+    limit = request.query.get('limit', 12)
+    days = request.query.get('days', 7)
+
+    conn = db.get_connection()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    query = """
+        SELECT * FROM products 
+        WHERE created_at >= datetime('now', ?)
+        ORDER BY created_at DESC, id DESC
+        LIMIT ?
+    """
+
+    cursor.execute(query, (f'-{days} days', limit))
+
+    products = []
+    for row in cursor.fetchall():
+        product = {
+            'id': row['id'],
+            'name': row['name'],
+            'description': row['description'],
+            'price': row['price'],
+            'stock_quantity': row['stock_quantity'],
+            'category': row['category'],
+            'image_url': row['image_url'],
+            'created_at': row['created_at']
+        }
+        products.append(product)
+
+    conn.close()
+
+    response.content_type = 'application/json'
+    return json.dumps(products, ensure_ascii=False, default=str)
+
+
+@route('/api/products/stats', method='GET')
+def api_get_stats():
+    """Получить статистику для страницы новинок"""
+    conn = db.get_connection()
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    # Количество новинок за месяц
+    cursor.execute("""
+        SELECT COUNT(*) as count 
+        FROM products 
+        WHERE created_at >= datetime('now', '-30 days')
+    """)
+    new_count = cursor.fetchone()['count']
+
+    # Категории с новинками
+    cursor.execute("""
+        SELECT category, COUNT(*) as count 
+        FROM products 
+        WHERE created_at >= datetime('now', '-30 days')
+        GROUP BY category
+        ORDER BY count DESC
+    """)
+    categories_stats = [dict(row) for row in cursor.fetchall()]
+
+    # Средняя цена новинок
+    cursor.execute("""
+        SELECT AVG(price) as avg_price 
+        FROM products 
+        WHERE created_at >= datetime('now', '-30 days')
+    """)
+    avg_price = cursor.fetchone()['avg_price'] or 0
+
+    conn.close()
+
+    return json.dumps({
+        'new_count': new_count,
+        'categories_stats': categories_stats,
+        'avg_price': round(avg_price, 2)
+    }, ensure_ascii=False)
+
 # Запуск сервера
 if __name__ == '__main__':
     print("Сервер запущен на http://localhost:8080")
