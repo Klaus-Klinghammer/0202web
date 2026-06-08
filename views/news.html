@@ -267,6 +267,34 @@
             cursor: not-allowed;
         }
 
+        .question-form-container {
+            margin: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .error-message {
+            font-size: 12px;
+            color: #ff4757;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .success-message {
+            background: #e0f7f0;
+            color: #00b894;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .input-error {
+            border-color: #ff4757 !important;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -434,6 +462,45 @@
         </select>
     </div>
 
+    <!-- Форма вопроса -->
+    <div class="question-form-container">
+        <h3 style="margin-bottom: 15px; color: #333;">❓ Есть вопрос по новинке?</h3>
+        <p style="margin-bottom: 20px; color: #666; font-size: 14px;">Задайте вопрос нашим специалистам и мы ответим вам в ближайшее время</p>
+
+        <form id="questionForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; color: #333; font-weight: bold;">Ваше имя *</label>
+                    <input type="text" id="userName" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 14px;" placeholder="Иван Иванов">
+                    <span id="nameError" class="error-message" style="display: none;"></span>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; color: #333; font-weight: bold;">Email *</label>
+                    <input type="email" id="userEmail" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 14px;" placeholder="ivan@example.com">
+                    <span id="emailError" class="error-message" style="display: none;"></span>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #333; font-weight: bold;">Название товара *</label>
+                <input type="text" id="productName" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 14px;" placeholder="Например: Intel Core i9-13900K">
+                <span id="productError" class="error-message" style="display: none;"></span>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #333; font-weight: bold;">Ваш вопрос *</label>
+                <textarea id="userQuestion" rows="4" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 14px; resize: vertical;" placeholder="Опишите ваш вопрос подробно..."></textarea>
+                <span id="questionError" class="error-message" style="display: none;"></span>
+            </div>
+
+            <div id="formMessage" style="margin-bottom: 15px;"></div>
+
+            <button type="submit" id="submitQuestionBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%;">
+                Отправить вопрос
+            </button>
+        </form>
+    </div>
+
     <div id="productsContainer" class="products-container">
         <div class="loading">Загрузка новинок...</div>
     </div>
@@ -451,6 +518,44 @@
     </div>
 
     <script>
+        // Валидатор для формы
+        class QuestionValidator {
+            static validateName(name) {
+                if (!name) return 'Имя обязательно для заполнения';
+                if (name.length < 2) return 'Имя должно содержать минимум 2 символа';
+                if (name.length > 50) return 'Имя не должно превышать 50 символов';
+                if (!name.replace(/ /g, '').match(/^[a-zA-Zа-яА-Я]+$/)) {
+                    return 'Имя должно содержать только буквы и пробелы';
+                }
+                return null;
+            }
+
+            static validateEmail(email) {
+                if (!email) return 'Email обязателен для заполнения';
+                if (!email.includes('@') || !email.includes('.')) {
+                    return 'Введите корректный email адрес';
+                }
+                if (email.length > 100) return 'Email не должен превышать 100 символов';
+                const emailRegex = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
+                if (!emailRegex.test(email)) return 'Введите корректный email адрес';
+                return null;
+            }
+
+            static validateProductName(productName) {
+                if (!productName) return 'Укажите название товара';
+                if (productName.length < 2) return 'Название товара слишком короткое';
+                if (productName.length > 100) return 'Название товара слишком длинное';
+                return null;
+            }
+
+            static validateQuestion(question) {
+                if (!question) return 'Введите ваш вопрос';
+                if (question.length < 10) return 'Вопрос должен содержать минимум 10 символов';
+                if (question.length > 1000) return 'Вопрос не должен превышать 1000 символов';
+                return null;
+            }
+        }
+
         class NewsManager {
             constructor() {
                 this.apiUrl = '/api';
@@ -463,6 +568,7 @@
                 await this.loadNews();
                 await this.updateCartCount();
                 this.setupEventListeners();
+                this.setupQuestionForm();
             }
 
             setupEventListeners() {
@@ -479,6 +585,144 @@
                     this.currentSort = e.target.value;
                     this.loadNews();
                 });
+            }
+
+            setupQuestionForm() {
+                const form = document.getElementById('questionForm');
+                if (!form) return;
+
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await this.submitQuestion();
+                });
+
+                const fields = [
+                    { id: 'userName', validator: QuestionValidator.validateName, errorId: 'nameError' },
+                    { id: 'userEmail', validator: QuestionValidator.validateEmail, errorId: 'emailError' },
+                    { id: 'productName', validator: QuestionValidator.validateProductName, errorId: 'productError' },
+                    { id: 'userQuestion', validator: QuestionValidator.validateQuestion, errorId: 'questionError' }
+                ];
+
+                fields.forEach(field => {
+                    const input = document.getElementById(field.id);
+                    if (input) {
+                        input.addEventListener('blur', () => {
+                            const error = field.validator(input.value);
+                            const errorSpan = document.getElementById(field.errorId);
+                            if (error) {
+                                errorSpan.textContent = error;
+                                errorSpan.style.display = 'block';
+                                input.classList.add('input-error');
+                            } else {
+                                errorSpan.style.display = 'none';
+                                input.classList.remove('input-error');
+                            }
+                        });
+
+                        input.addEventListener('input', () => {
+                            const errorSpan = document.getElementById(field.errorId);
+                            errorSpan.style.display = 'none';
+                            input.classList.remove('input-error');
+                        });
+                    }
+                });
+            }
+
+            async submitQuestion() {
+                const name = document.getElementById('userName').value.trim();
+                const email = document.getElementById('userEmail').value.trim();
+                const productName = document.getElementById('productName').value.trim();
+                const question = document.getElementById('userQuestion').value.trim();
+                const submitBtn = document.getElementById('submitQuestionBtn');
+                const formMessage = document.getElementById('formMessage');
+
+                const errors = {};
+
+                const nameError = QuestionValidator.validateName(name);
+                if (nameError) errors.name = nameError;
+
+                const emailError = QuestionValidator.validateEmail(email);
+                if (emailError) errors.email = emailError;
+
+                const productError = QuestionValidator.validateProductName(productName);
+                if (productError) errors.product_name = productError;
+
+                const questionError = QuestionValidator.validateQuestion(question);
+                if (questionError) errors.question = questionError;
+
+                if (Object.keys(errors).length > 0) {
+                    if (errors.name) {
+                        document.getElementById('nameError').textContent = errors.name;
+                        document.getElementById('nameError').style.display = 'block';
+                        document.getElementById('userName').classList.add('input-error');
+                    }
+                    if (errors.email) {
+                        document.getElementById('emailError').textContent = errors.email;
+                        document.getElementById('emailError').style.display = 'block';
+                        document.getElementById('userEmail').classList.add('input-error');
+                    }
+                    if (errors.product_name) {
+                        document.getElementById('productError').textContent = errors.product_name;
+                        document.getElementById('productError').style.display = 'block';
+                        document.getElementById('productName').classList.add('input-error');
+                    }
+                    if (errors.question) {
+                        document.getElementById('questionError').textContent = errors.question;
+                        document.getElementById('questionError').style.display = 'block';
+                        document.getElementById('userQuestion').classList.add('input-error');
+                    }
+
+                    this.showNotification('Пожалуйста, исправьте ошибки в форме', 'error');
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Отправка...';
+
+                try {
+                    const response = await fetch(`${this.apiUrl}/questions`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: name,
+                            email: email,
+                            product_name: productName,
+                            question: question
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        formMessage.innerHTML = `<div class="success-message">✓ ${result.message}</div>`;
+                        document.getElementById('questionForm').reset();
+                        setTimeout(() => {
+                            formMessage.innerHTML = '';
+                        }, 5000);
+                        this.showNotification(result.message);
+                    } else {
+                        if (result.errors) {
+                            Object.keys(result.errors).forEach(field => {
+                                let errorFieldId;
+                                if (field === 'product_name') errorFieldId = 'productError';
+                                else errorFieldId = `${field}Error`;
+
+                                const errorField = document.getElementById(errorFieldId);
+                                if (errorField) {
+                                    errorField.textContent = result.errors[field];
+                                    errorField.style.display = 'block';
+                                }
+                            });
+                        }
+                        this.showNotification('Ошибка при отправке вопроса', 'error');
+                    }
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    this.showNotification('Ошибка соединения', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Отправить вопрос';
+                }
             }
 
             async loadNews() {
