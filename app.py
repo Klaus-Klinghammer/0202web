@@ -292,6 +292,81 @@ def api_get_stats():
         'avg_price': round(avg_price, 2)
     }, ensure_ascii=False)
 
+
+@route('/api/questions', method='POST')
+def api_submit_question():
+    """Обработка вопросов пользователей о новинках"""
+    try:
+        data = request.json
+
+        # Серверная валидация
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        product_name = data.get('product_name', '').strip()
+        question = data.get('question', '').strip()
+
+        errors = {}
+
+        # Валидация имени
+        if not name:
+            errors['name'] = 'Имя обязательно для заполнения'
+        elif len(name) < 2:
+            errors['name'] = 'Имя должно содержать минимум 2 символа'
+        elif len(name) > 50:
+            errors['name'] = 'Имя не должно превышать 50 символов'
+        elif not name.replace(' ', '').isalpha():
+            errors['name'] = 'Имя должно содержать только буквы и пробелы'
+
+        # Валидация email
+        if not email:
+            errors['email'] = 'Email обязателен для заполнения'
+        elif '@' not in email or '.' not in email:
+            errors['email'] = 'Введите корректный email адрес'
+        elif len(email) > 100:
+            errors['email'] = 'Email не должен превышать 100 символов'
+
+        # Валидация названия товара
+        if not product_name:
+            errors['product_name'] = 'Укажите название товара'
+        elif len(product_name) < 2:
+            errors['product_name'] = 'Название товара слишком короткое'
+        elif len(product_name) > 100:
+            errors['product_name'] = 'Название товара слишком длинное'
+
+        # Валидация вопроса
+        if not question:
+            errors['question'] = 'Введите ваш вопрос'
+        elif len(question) < 10:
+            errors['question'] = 'Вопрос должен содержать минимум 10 символов'
+        elif len(question) > 1000:
+            errors['question'] = 'Вопрос не должен превышать 1000 символов'
+
+        # Если есть ошибки, возвращаем их
+        if errors:
+            response.status = 400
+            return json.dumps({
+                'success': False,
+                'errors': errors
+            }, ensure_ascii=False)
+
+        # Здесь можно сохранить вопрос в БД или отправить email
+        # Для демонстрации просто логируем
+        print(f"Новый вопрос от {name} ({email}) о товаре '{product_name}':")
+        print(f"Вопрос: {question}")
+
+        # Имитируем успешную отправку
+        return json.dumps({
+            'success': True,
+            'message': 'Ваш вопрос успешно отправлен! Мы ответим вам в ближайшее время.'
+        }, ensure_ascii=False)
+
+    except Exception as e:
+        response.status = 500
+        return json.dumps({
+            'success': False,
+            'errors': {'general': f'Произошла ошибка: {str(e)}'}
+        }, ensure_ascii=False)
+    
 # Запуск сервера
 if __name__ == '__main__':
     print("Сервер запущен на http://localhost:8080")
